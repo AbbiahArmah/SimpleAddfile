@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload and Firebase Storage</title>
+    <style>
+         *, *:after, *:before {
+            box-sizing: border-box;
+        }
+        :root {
+            --c-action-primary: #2e44ff;
+            --c-action-primary-accent: #e9e5ff;
+            --c-action-secondary: #e5e5e5;
+            --c-text-primary: #0d0f21; 
+            --c-text-secondary: #6a6b76;
+            --c-background-primary: #d0d1de;
+        }
+        body {
+            font-family: "Inter", sans-serif;
+            color: var(--c-text-primary);
+            background-color: var(--c-background-primary);  
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+        }
+        input, button, select, textarea {
+            font: inherit;
+        }
+        .modal {
+            width: 90%;
+            max-width: 500px;
+            margin: 10vh auto;
+            background-color: #FFF;
+            border-radius: .5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); 
+        }
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 1.5rem;
+        }
+        .logo-circle {
+            width: 3.5rem;
+            height: 3.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background-color: var(--c-action-primary-accent);
+        }
+        .btn-close {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: .25rem;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+        }
+        .btn-close:hover, .btn-close:focus {
+            background-color: var(--c-action-primary-accent);
+        }
+        .modal-body {
+            padding: 1rem 1.5rem;
+        }
+        .modal-title {
+            font-weight: 700;
+        }
+        .modal-description {
+            color: var(--c-text-secondary);
+        }
+        .upload-area {
+            margin-top: 1.25rem;
+            border: none;
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%23ccc' stroke-width='3' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+            background-color: transparent;
+            padding: 3rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+        .upload-area:hover, .upload-area:focus {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' stroke='%232e44ff' stroke-width='3' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+        .upload-area-icon {
+            display: block;
+            width: 2.25rem;
+            height: 2.25rem;
+        }
+        .upload-area-icon svg {
+            max-height: 100%;
+            max-width: 100%;
+        }
+        .upload-area-title {
+            margin-top: 1rem;
+            display: block;
+            font-weight: 700;
+            color: var(--c-text-primary);
+        }
+        .upload-area-description {
+            display: block;
+            color: var(--c-text-secondary);
+        }
+        .upload-area-description strong {
+            color: var(--c-action-primary);
+            font-weight: 700;
+        }
+        .modal-footer {
+            padding: 1rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .btn-secondary, .btn-primary {
+            padding: .5rem 1rem;
+            font-weight: 500;
+            border: 2px solid var(--c-action-secondary);
+            border-radius: .25rem;
+            background-color: transparent;
+            cursor: pointer;
+        }
+        .btn-primary {
+            color: #FFF;
+            background-color: var(--c-action-primary);
+            border-color: var(--c-action-primary);
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-logo">
+                <span class="logo-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="419.116" viewBox="0 0 512 419.116">
+                        <defs>
+                            <clipPath id="clip-folder-new">
+                                <rect width="512" height="419.116" />
+                            </clipPath>
+                        </defs>
+                        <g id="folder-new" clip-path="url(#clip-folder-new)">
+                            <path id="Union_1" data-name="Union 1" d="M16.991,419.116A16.989,16.989,0,0,1,0,402.125V16.991A16.989,16.989,0,0,1,16.991,0H146.124a17,17,0,0,1,10.342,3.513L227.217,57.77H437.805A16.989,16.989,0,0,1,454.8,74.761v53.244h40.213A16.992,16.992,0,0,1,511.6,148.657L454.966,405.222a17,17,0,0,1-16.6,13.332H410.053v.562ZM63.06,384.573H424.722L473.86,161.988H112.2Z" fill="var(--c-action-primary)" stroke="" stroke-width="1" />
+                        </g>
+                    </svg>
+                </span>
+            </div>
+            <button class="btn-close">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" d="M0 0h24v24H0V0z"/><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z" fill="var(--c-text-secondary)"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <h2 class="modal-title">Upload a file</h2>
+            <p class="modal-description">Attach the file below</p>
+            <div class="upload-area" id="uploadArea">
+                <span class="upload-area-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="60" height="60" viewBox="0 0 60 60">
+                        <defs>
+                            <clipPath id="clip-upload">
+                                <rect width="60" height="60" />
+                            </clipPath>
+                        </defs>
+                        <g id="upload" clip-path="url(#clip-upload)">
+                            <rect id="Rectangle_106" data-name="Rectangle 106" width="60" height="60" fill="none" />
+                            <g id="Group_2" data-name="Group 2" transform="translate(11.116 9)">
+                                <path id="Path_44" data-name="Path 44" d="M40.323,17.823a1.488,1.488,0,0,0-.218.023h-.39a1.509,1.509,0,0,0-.239-1.151,1.394,1.394,0,0,0-.159-.189l-10-10A1.5,1.5,0,1,0,27.72,7.72L36.439,16.44H28.5a1.5,1.5,0,0,0,0,3h12a1.473,1.473,0,0,0,.49-.083,1.486,1.486,0,0,0-.668-1.534Z" transform="translate(-1896 -440.726)" fill="var(--c-text-secondary)" />
+                                <path id="Path_45" data-name="Path 45" d="M39.5,12.5A1.5,1.5,0,0,0,41,11H27.5A1.5,1.5,0,1,0,27.5,14H41a1.5,1.5,0,0,0,1.5-1.5Zm-1.5,1H27.5A1.5,1.5,0,0,0,26,15.5v15A4.5,4.5,0,0,1,21.5,35H4.939L10,29.94a1.5,1.5,0,0,0-2.12-2.12l-7.5,7.5A1.491,1.491,0,0,0,0,36a1.5,1.5,0,0,0,.44,1.06l7.5,7.5a1.5,1.5,0,0,0,2.12-2.12L4.939,37H21.5A7.5,7.5,0,0,0,29,29.5v-15A1.5,1.5,0,0,0,28,13.5Z" transform="translate(2944 428)" fill="var(--c-text-secondary)" />
+                                <path id="Path_47" data-name="Path 47" d="M-2752.708,185.011a7.5,7.5,0,0,1-7.5-7.5v-222.5h-162.5a7.5,7.5,0,0,1-7.5-7.5v-60.42a28.548,28.548,0,0,1,8.427-20.2,28.545,28.545,0,0,1,20.2-8.427h167.378a38.052,38.052,0,0,1,26.93,11.158l61.92,61.921a38.049,38.049,0,0,1,11.158,26.93V160.01a7.5,7.5,0,0,1-7.5,7.5Zm-170-245h162.5a7.5,7.5,0,0,1,7.5,7.5V144.01h45V-3.589a23.091,23.091,0,0,0-6.772-16.319l-61.921-61.92a23.093,23.093,0,0,0-16.319-6.772h-167.378a13.57,13.57,0,0,0-13.563,13.564Z" transform="translate(2922 234.105)" fill="var(--c-text-secondary)" />
+                            </g>
+                        </g>
+                    </svg>
+                </span>
+                <span class="upload-area-title">Upload File</span>
+                <span class="upload-area-description"><strong>Maximum size:</strong> 15 MB</span>
+            </div>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+            <div id="fileName"></div>
+            <div class="error-message" id="errorMessage"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-primary" id="sendEmail">Upload</button>
+        </div>
+    </div>
+</body>
+</html>
+
+</head>
+<body>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js"></script>
+
+    <!-- Your Firebase configuration -->
+    <script>
+        // Your Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyCeq42vU6ZW3fzKsVxEezKoswJcr5mH3UQ",
+            authDomain: "feltcute-c6bc7.firebaseapp.com",
+            projectId: "feltcute-c6bc7",
+            storageBucket: "feltcute-c6bc7.appspot.com",
+            messagingSenderId: "27439324701",
+            appId: "1:27439324701:web:38256c0f3b50b8e641b0f4"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <!-- File upload script -->
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileNameDisplay = document.getElementById('fileName');
+        const errorMessage = document.getElementById('errorMessage');
+        let selectedFile;
+
+        // Trigger file selection on upload area click
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Handle file selection
+        fileInput.addEventListener('change', (event) => {
+            selectedFile = event.target.files[0];
+            if (selectedFile && selectedFile.size < 15 * 1024 * 1024) {
+                fileNameDisplay.textContent = `Selected file: ${selectedFile.name}`;
+                errorMessage.textContent = '';
+            } else {
+                fileNameDisplay.textContent = '';
+                errorMessage.textContent = 'File must be less than 15MB.';
+            }
+        });
+
+        // Handle upload button click
+        const uploadButton = document.getElementById('sendEmail');
+        uploadButton.addEventListener('click', async () => {
+            if (selectedFile && selectedFile.size < 15 * 1024 * 1024) {
+                try {
+                    const storage = firebase.storage();
+                    const storageRef = storage.ref();
+                    const fileRef = storageRef.child(selectedFile.name);
+                    const snapshot = await fileRef.put(selectedFile);
+                    errorMessage.textContent = 'File uploaded successfully!';
+                } catch (error) {
+                    errorMessage.textContent = `Upload failed: ${error.message}`;
+                }
+            } else {
+                errorMessage.textContent = 'Please select a file that is less than 15MB.';
+            }
+        });
+    </script>
+
+</body>
+</html>
